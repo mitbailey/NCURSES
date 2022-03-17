@@ -4,12 +4,12 @@ CPPOBJS = src/ui.o
 COBJS =
 EDCXXFLAGS = -I ./ -I ./include/ -Wall -pthread $(CXXFLAGS)
 EDCFLAGS = $(CFLAGS)
-EDLDFLAGS := -lpthread -lm -lncurses $(LDFLAGS)
+EDLDFLAGS := -lpthread -lm -lmenu -lncurses $(LDFLAGS)
 TARGET = ui.out
 
 all: $(COBJS) $(CPPOBJS)
 	$(CXX) $(EDCXXFLAGS) $(COBJS) $(CPPOBJS) -o $(TARGET) $(EDLDFLAGS)
-	./$(TARGET)
+	# ./$(TARGET)
 
 %.o: %.cpp
 	$(CXX) $(EDCXXFLAGS) -o $@ -c $<
