@@ -75,6 +75,15 @@ void WindowsInit(WINDOW *win[], float win_w[], float win_h[], int rows, int cols
 
     if ((win1w + win2w + 1) > cols) { win2w = cols - win1w - 1; }
 
+    win0h = (win0h < winmin_h[0]) ? winmin_h[0] : win0h;
+    win1h = (win1h < winmin_h[1]) ? winmin_h[1] : win1h;
+    win2h = (win2h < winmin_h[2]) ? winmin_h[2] : win2h;
+
+    // int win1y = floor(1 + (win_h[0] * rows));
+    // int win2y = floor(1 + (win_h[0] * rows));
+
+
+
     win[0] = InitWin(0, 1, win0w, win0h);
     {
         mvwprintw(win[0], 0, 2, " OUTPUT ");
@@ -85,14 +94,14 @@ void WindowsInit(WINDOW *win[], float win_w[], float win_h[], int rows, int cols
         wrefresh(win[0]);
     }
 
-    win[1] = InitWin(0, floor(1 + (win_h[0] * rows)), win1w, win1h);
+    win[1] = InitWin(0, floor(1 + win0h), win1w, win1h);
     {
         mvwprintw(win[1], 0, 2, " WHEEL OF MISFORTUNE ");
         mvwprintw(win[1], win1h - 1, win1w - 10, " %dx%d ", win1w, win1h);
         wrefresh(win[1]);
     }
 
-    win[2] = InitWin(floor(1 + (win_w[1] * cols)), floor(1 + (win_h[0] * rows)), win2w, win2h);
+    win[2] = InitWin(floor(1 + win1w), floor(1 + win0h), win2w, win2h);
     {
         mvwprintw(win[2], 0, 2, " INPUT ");
         mvwprintw(win[2], 2, 2, "Selected:");

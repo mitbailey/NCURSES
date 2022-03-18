@@ -9,7 +9,7 @@ TARGET = ui.out
 
 all: $(COBJS) $(CPPOBJS)
 	$(CXX) $(EDCXXFLAGS) $(COBJS) $(CPPOBJS) -o $(TARGET) $(EDLDFLAGS)
-	# ./$(TARGET)
+	./$(TARGET)
 
 %.o: %.cpp
 	$(CXX) $(EDCXXFLAGS) -o $@ -c $<

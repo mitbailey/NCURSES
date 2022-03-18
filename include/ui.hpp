@@ -15,6 +15,7 @@ static WINDOW *win[3] = {0};
 static float win_w[3] = {1.f, 0.4, 0.6};
 static float win_h[3] = {0.25, 0.4, 0.4};
 static float win0spcg = 0.3; // Spacing between each of the three entries within window 0, as a percentage of the total width.
+static int winmin_h[3] = {7, 10, 10};
 
 template <class T>
 class Data
