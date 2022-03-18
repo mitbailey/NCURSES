@@ -11,9 +11,10 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
-WINDOW *win[3] = {0};
-float win_w[3] = {1.f, 0.6, 0.4};
-float win_h[3] = {0.25, 0.5, 0.25};
+static WINDOW *win[3] = {0};
+static float win_w[3] = {1.f, 0.4, 0.6};
+static float win_h[3] = {0.25, 0.4, 0.4};
+static float win0spcg = 0.3; // Spacing between each of the three entries within window 0, as a percentage of the total width.
 
 template <class T>
 class Data
@@ -60,20 +61,20 @@ typedef struct
 } ui_data_t;
 
 char *menu1_choices[] = {
-    "1:",
-    "2:",
-    "3:",
-    "4:",
-    "Exit:",
+    (char *)"1:",
+    (char *)"2:",
+    (char *)"3:",
+    (char *)"4:",
+    (char *)"Exit:",
     (char *)NULL,
 };
 
 char *menu1_choices_desc[] = {
-    "Choice 1",
-    "Choice 2",
-    "Choice 3",
-    "Choice 4",
-    "Exits the Program",
+    (char *)"Choice 1",
+    (char *)"Choice 2",
+    (char *)"Choice 3",
+    (char *)"Choice 4",
+    (char *)"Exits the Program",
     (char *)NULL,
 };
 

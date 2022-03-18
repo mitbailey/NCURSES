@@ -14,8 +14,11 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <math.h>
 #include "ui.hpp"
 #include "meb_print.h"
+
+volatile sig_atomic_t done;
 
 WINDOW *InitWin(int col, int row, int cols, int rows)
 {
@@ -63,30 +66,39 @@ void DestroyMenu(MENU *menu, int n_choices, ITEM **items)
 
 void WindowsInit(WINDOW *win[], float win_w[], float win_h[], int rows, int cols)
 {
-    win[0] = InitWin(0, 1, win_w[0] * cols, win_h[0] * rows);
+    int win0w = floor(win_w[0] * cols);
+    int win0h = floor(win_h[0] * rows);
+    int win1w = floor(win_w[1] * cols);
+    int win1h = floor(win_h[1] * rows);
+    int win2w = floor(win_w[2] * cols);
+    int win2h = floor(win_h[2] * rows);
+
+    if ((win1w + win2w + 1) > cols) { win2w = cols - win1w - 1; }
+
+    win[0] = InitWin(0, 1, win0w, win0h);
     {
         mvwprintw(win[0], 0, 2, " OUTPUT ");
         mvwprintw(win[0], 1, 2, "IN");
-        mvwprintw(win[0], 1, 32, "OUT");
-        mvwprintw(win[0], 1, 60, "STEP");
+        mvwprintw(win[0], 1, floor(win0spcg * win0w), "OUT");
+        mvwprintw(win[0], 1, 2 * floor(win0spcg * win0w), "STEP");
+        mvwprintw(win[0], win0h - 1, win0w - 10, " %dx%d ", win0w, win0h);
         wrefresh(win[0]);
     }
 
-    win[1] = InitWin(0, 1 + (win_h[0] * rows), win_w[1] * cols, win_h[1] * rows);
+    win[1] = InitWin(0, floor(1 + (win_h[0] * rows)), win1w, win1h);
     {
         mvwprintw(win[1], 0, 2, " WHEEL OF MISFORTUNE ");
+        mvwprintw(win[1], win1h - 1, win1w - 10, " %dx%d ", win1w, win1h);
         wrefresh(win[1]);
-
-        // Enable Fn keys in this window.
-        // keypad(win[1], TRUE);
     }
 
-    win[2] = InitWin(1 + (win_w[1] * cols), 1 + (win_h[0] * rows), win_w[2] * cols, win_h[2] * rows);
+    win[2] = InitWin(floor(1 + (win_w[1] * cols)), floor(1 + (win_h[0] * rows)), win2w, win2h);
     {
         mvwprintw(win[2], 0, 2, " INPUT ");
-        wrefresh(win[2]);
-        // keypad(win[2], TRUE);
         mvwprintw(win[2], 2, 2, "Selected:");
+        mvwprintw(win[2], 3, 2, "Terminal Size: %d x %d", rows, cols);
+        mvwprintw(win[2], win2h - 1, win2w - 10, " %dx%d ", win2w, win2h);
+        wrefresh(win[2]);
     }
 }
 
@@ -113,29 +125,28 @@ void ncurses_init()
 
 void ncurses_cleanup()
 {
-    clear();
     endwin();
+    clear();
 }
 
-// void generate_menu(ITEM **menu_items, MENU *menu, int n_choices)
-// {
-
-// }
+void sighandler(int sig)
+{
+    done = 1;
+}
 
 // To be replaced by an external main().
 int main()
 {
+    signal(SIGINT, sighandler);
+
     // Example data package.
     ui_data_t data[1] = {0};
-    // data->d1 = Data<int>();
-    // data->d2 = Data<double>();
-    // data->d3 = Data<double>();
 
     // Handles the UI thread.
     pthread_t tid;
     pthread_create(&tid, NULL, InterfaceThread, data);
 
-    for (int i = 0; i < INT32_MAX; i++)
+    for (int i = 0; (i < INT32_MAX) && (!done); i++)
     {
         // dbprintlf("%d %.0f %.0f", data->d1->peekData(), data->d2->peekData(), data->d3->peekData());
         data->d1->set(data->d1->peek() + 1);
@@ -159,7 +170,7 @@ void *InterfaceThread(void *vp)
     int rows = 0, cols = 0;
     getmaxyx(stdscr, rows, cols);
     WindowsInit(win, win_w, win_h, rows, cols);
-
+    
     // Menu1 setup.
     ITEM **menu1_items;
     int c;
@@ -187,7 +198,7 @@ void *InterfaceThread(void *vp)
     // Menu1 nav
     // Makes wgetch nonblocking so the menu isnt hogging all the cycles.
     nodelay(stdscr, true);
-    while ((c = wgetch(stdscr)) != KEY_F(1))
+    while ((c = wgetch(stdscr)) != KEY_F(1) && (!done))
     {
         // Menu handling.
         switch (c)
@@ -223,7 +234,7 @@ void *InterfaceThread(void *vp)
             // Re-initialization.
             ncurses_init();
             refresh();
-            int rows = 0, cols = 0;
+
             getmaxyx(stdscr, rows, cols);
             WindowsInit(win, win_w, win_h, rows, cols);
 
@@ -242,10 +253,6 @@ void *InterfaceThread(void *vp)
                 post_menu(menu1);
                 wrefresh(win[1]);
             }
-
-            // Debug printout.
-            mvwprintw(win[2], 3, 2, "%d x %d", rows, cols);
-            wrefresh(win[2]);
         }
 
         // Output Window Data Printouts
@@ -258,13 +265,13 @@ void *InterfaceThread(void *vp)
 
         if (data->d2->rdy())
         {
-            mvwprintw(win[0], 2, 32, "%.2f", data->d2->get());
+            mvwprintw(win[0], 2, floor(win0spcg * floor(win_w[0] * cols)), "%.2f", data->d2->get());
             redraw = true;
         }
 
         if (data->d3->rdy())
         {
-            mvwprintw(win[0], 2, 60, "%.2f", data->d3->get());
+            mvwprintw(win[0], 2, 2 * floor(win0spcg * floor(win_w[0] * cols)), "%.2f", data->d3->get());
             redraw = true;
         }
 
@@ -284,13 +291,11 @@ void *InterfaceThread(void *vp)
         }
     }
 
-    getch();
-
 program_end:
     DestroyMenu(menu1, menu1_n_choices, menu1_items);
     WindowsDestroy(win, ARRAY_SIZE(win));
     refresh();
-
+    done = 1;
     ncurses_cleanup();
 
     return 0;
