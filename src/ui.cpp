@@ -79,11 +79,6 @@ void WindowsInit(WINDOW *win[], float win_w[], float win_h[], int rows, int cols
     win1h = (win1h < winmin_h[1]) ? winmin_h[1] : win1h;
     win2h = (win2h < winmin_h[2]) ? winmin_h[2] : win2h;
 
-    // int win1y = floor(1 + (win_h[0] * rows));
-    // int win2y = floor(1 + (win_h[0] * rows));
-
-
-
     win[0] = InitWin(0, 1, win0w, win0h);
     {
         mvwprintw(win[0], 0, 2, " OUTPUT ");
